@@ -152,7 +152,7 @@ public abstract class CommonPrerequisiteValidator implements PrerequisiteValidat
               "Target '%s' violates visibility of "
                   + "%s. Continuing because --nocheck_visibility is active",
               rule, AliasProvider.describeTargetWithAliases(prerequisite, TargetMode.WITHOUT_KIND));
-      context.ruleWarning(errorMessage);
+      //context.ruleWarning(errorMessage);
     } else {
       String errorMessage =
           String.format(
