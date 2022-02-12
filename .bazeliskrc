@@ -1,0 +1,3 @@
+BAZELISK_BASE_URL=https://artifactory.d.musta.ch/artifactory/generic-airbnb/airbnb/bazel/releases/download/
+
+# This currently points to a build of https://github.com/EngFlow/bazel/tree/engflow-pkg-4.0-plus-details sha: 35167928bedff774b6a61c27fd109bd891cb9024
