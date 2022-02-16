@@ -7,11 +7,29 @@
 
 # You can get it here https://artifactory.d.musta.ch/artifactory/webapp/#/profile
 API_KEY=FILL_IN
-VERSION=FILL_IN
-# UNCOMMENT OUT ONE OF THE BELOW
-#PLATFORM=darwin-x86_64
-#PLATFORM=darwin-arm64
-#PLATFORM=linux-x86_64
+
+echo "Using API Key: $API_KEY"
+# Bump this when you want to push
+VERSION=4.1.4
+echo "Deploying bazel artifact version $VERSION"
+
+########### CALCULATE PLATFORM ##########
+grep_linux=$(uname -s | grep -i linux)
+grep_darwin=$(uname -s | grep -i darwin)
+grep_x86_64=$(uname -m | grep -i x86_64)
+grep_arm64=$(uname -m | grep -i arm64)
+if [[ -n $grep_linux ]] && [[ -n $grep_x86_64 ]]; then
+    PLATFORM=linux-x86_64
+elif [[ -n $grep_darwin ]] && [[ -n $grep_x86_64 ]]; then
+    PLATFORM=darwin-x86_64
+elif [[ -n $grep_darwin ]] && [[ -n $grep_arm64 ]]; then
+    PLATFORM=darwin-arm64
+else
+    echo "$(uname -s) $(uname -m) is not a supported platform"
+    exit 1
+fi
+
+echo "PLATFORM is inferred to be $PLATFORM"
 
 ########### END OF INPUTS ##########
 
@@ -26,7 +44,7 @@ PACKAGE_FOLDER="generic-airbnb/airbnb/bazel/releases/download"
 ARTIFACTORY_FILENAME=bazel-$VERSION-$PLATFORM
 LOCAL_FILE=bazel-bin/src/bazel
 
-#bazel build -c opt //src:bazel --incompatible_restrict_string_escapes=false
+bazel build -c opt //src:bazel --incompatible_restrict_string_escapes=false
 curl --header "X-JFrog-Art-Api: $API_KEY" \
     -X PUT $ARTIFACTORY_URL/$PACKAGE_FOLDER/$VERSION/$ARTIFACTORY_FILENAME \
     --data-binary $LOCAL_FILE
