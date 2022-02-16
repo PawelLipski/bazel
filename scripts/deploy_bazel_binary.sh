@@ -5,7 +5,9 @@
 
 ########### INPUTS ##########
 
-# You can get it here https://artifactory.d.musta.ch/artifactory/webapp/#/profile
+# Log into artifactory, then visit your user profile at:
+# https://artifactory.d.musta.ch/artifactory/webapp/#/profile
+# to get your API Key
 API_KEY=FILL_IN
 
 echo "Using API Key: $API_KEY"
