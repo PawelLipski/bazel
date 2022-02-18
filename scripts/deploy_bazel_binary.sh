@@ -20,7 +20,7 @@ fi
 
 echo "Using API Key: $API_KEY"
 # Don't forget to bump this
-VERSION="5.0.1"
+VERSION="5.0.2"
 echo "Deploying bazel artifact version $VERSION"
 
 ########### CALCULATE PLATFORM ##########
