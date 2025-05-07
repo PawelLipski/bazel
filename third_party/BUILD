@@ -358,11 +358,16 @@ distrib_jar_filegroup(
     enable_distributions = ["debian"],
 )
 
+java_import(
+    name = "error_prone_check_api",
+    jars = ["error_prone_check_api.jar"],
+)
+
 java_library(
     name = "error_prone",
     exports = [
         ":error_prone_annotations",
-        "@maven//:com_google_errorprone_error_prone_check_api",
+        ":error_prone_check_api",
         "@maven//:com_google_errorprone_error_prone_core",
     ],
 )

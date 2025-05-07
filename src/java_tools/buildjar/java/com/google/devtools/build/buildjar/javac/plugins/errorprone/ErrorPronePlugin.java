@@ -79,10 +79,13 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
   public void processArgs(
       ImmutableList<String> standardJavacopts, ImmutableList<String> blazeJavacopts)
       throws InvalidCommandLineException {
+    long startTime = System.nanoTime();
     ImmutableList.Builder<String> epArgs = ImmutableList.<String>builder().addAll(blazeJavacopts);
     // allow javacopts that reference unknown error-prone checks
     epArgs.add("-XepIgnoreUnknownCheckNames");
     processEpOptions(epArgs.build());
+    double duration = (System.nanoTime() - startTime) / 1e6;
+    System.out.println("processArgs duration: " + duration + " ms");
   }
 
   private void processEpOptions(List<String> args) throws InvalidCommandLineException {
@@ -99,6 +102,7 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
       Log log,
       JavaCompiler compiler,
       BlazeJavacStatistics.Builder statisticsBuilder) {
+    long startTime = System.nanoTime();
     super.init(context, log, compiler, statisticsBuilder);
 
     setupMessageBundle(context);
@@ -110,6 +114,8 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
         ErrorProneAnalyzer.createByScanningForPlugins(scannerSupplier, epOptions, context);
     timings = ErrorProneTimings.instance(context);
     deferredCompletionFailureHandler = DeferredCompletionFailureHandler.instance(context);
+    double duration = (System.nanoTime() - startTime) / 1e6;
+    System.out.println("init duration: " + duration + " ms");
   }
 
   /** Run Error Prone analysis after performing dataflow checks. */
@@ -120,7 +126,10 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
             deferredCompletionFailureHandler.userCodeHandler);
     elapsed.start();
     try {
+      long startTime = System.nanoTime();
       errorProneAnalyzer.finished(new TaskEvent(Kind.ANALYZE, env.toplevel, env.enclClass.sym));
+      double duration = (System.nanoTime() - startTime) / 1e6;
+      System.out.println("===== errorProneAnalyzer.finished duration: " + duration + " ms =====");
     } catch (ErrorProneError e) {
       e.logFatalError(log, context);
       // let the exception propagate to javac's main, where it will cause the compilation to
@@ -134,12 +143,15 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
 
   @Override
   public void finish() {
+    long startTime = System.nanoTime();
     statisticsBuilder.totalErrorProneTime(elapsed.elapsed());
     initializationTime(timings).ifPresent(statisticsBuilder::errorProneInitializationTime);
     timings.timings().entrySet().stream()
         .sorted(Map.Entry.<String, Duration>comparingByValue().reversed())
         .limit(10) // best-effort to stay under the action metric size limit
         .forEachOrdered(e -> statisticsBuilder.addBugpatternTiming(e.getKey(), e.getValue()));
+    double duration = (System.nanoTime() - startTime) / 1e6;
+    System.out.println("finish duration: " + duration + " ms");
   }
 
   // TODO(cushon): remove once ErrorProneTimings#initializationTime makes it into an EP release

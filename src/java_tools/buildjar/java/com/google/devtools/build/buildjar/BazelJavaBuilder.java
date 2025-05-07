@@ -132,7 +132,7 @@ public class BazelJavaBuilder {
       throws IOException, InvalidCommandLineException {
     OptionsParser optionsParser =
         new OptionsParser(args, JavacOptions.createWithWarningsAsErrorsDefault(ImmutableList.of()));
-    ImmutableList<BlazeJavaCompilerPlugin> plugins =
+    ImmutableList<BlazeJavaCompilerPlugin> plugins = //ImmutableList.of();
         ImmutableList.of(new ErrorPronePlugin(BazelScannerSuppliers.bazelChecks()));
     return new JavaLibraryBuildRequest(
         optionsParser, plugins, new DependencyModule.Builder(), workDir);
