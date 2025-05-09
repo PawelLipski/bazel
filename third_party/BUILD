@@ -374,6 +374,8 @@ java_library(
         ":error_prone_annotations",
         ":error_prone_check_api",
         ":error_prone_core",
+        "@maven//:com_google_auto_auto_common",
+        "@maven//:com_google_errorprone_error_prone_annotation",
     ],
 )
 
