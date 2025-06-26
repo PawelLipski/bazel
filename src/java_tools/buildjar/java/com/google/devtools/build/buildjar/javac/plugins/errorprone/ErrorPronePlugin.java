@@ -79,10 +79,13 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
   public void processArgs(
       ImmutableList<String> standardJavacopts, ImmutableList<String> blazeJavacopts)
       throws InvalidCommandLineException {
+    long startTime = System.nanoTime();
     ImmutableList.Builder<String> epArgs = ImmutableList.<String>builder().addAll(blazeJavacopts);
     // allow javacopts that reference unknown error-prone checks
     epArgs.add("-XepIgnoreUnknownCheckNames");
     processEpOptions(epArgs.build());
+    long duration = (System.nanoTime() - startTime) / 1000;
+    System.out.println("ErrorPronePlugin.processArgs duration: " + duration + " us");
   }
 
   private void processEpOptions(List<String> args) throws InvalidCommandLineException {
@@ -99,6 +102,7 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
       Log log,
       JavaCompiler compiler,
       BlazeJavacStatistics.Builder statisticsBuilder) {
+    long startTime = System.nanoTime();
     super.init(context, log, compiler, statisticsBuilder);
 
     setupMessageBundle(context);
@@ -110,11 +114,14 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
         ErrorProneAnalyzer.createByScanningForPlugins(scannerSupplier, epOptions, context);
     timings = ErrorProneTimings.instance(context);
     deferredCompletionFailureHandler = DeferredCompletionFailureHandler.instance(context);
+    long duration = (System.nanoTime() - startTime) / 1000;
+    System.out.println("ErrorPronePlugin.init duration: " + duration + " us");
   }
 
   /** Run Error Prone analysis after performing dataflow checks. */
   @Override
   public void postFlow(Env<AttrContext> env) {
+    long startTime = System.nanoTime();
     DeferredCompletionFailureHandler.Handler previousDeferredCompletionFailureHandler =
         deferredCompletionFailureHandler.setHandler(
             deferredCompletionFailureHandler.userCodeHandler);
@@ -129,17 +136,22 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
     } finally {
       elapsed.stop();
       deferredCompletionFailureHandler.setHandler(previousDeferredCompletionFailureHandler);
+      long duration = (System.nanoTime() - startTime) / 1000;
+      System.out.println("ErrorPronePlugin.postFlow duration: " + duration + " us");
     }
   }
 
   @Override
   public void finish() {
+    long startTime = System.nanoTime();
     statisticsBuilder.totalErrorProneTime(elapsed.elapsed());
     initializationTime(timings).ifPresent(statisticsBuilder::errorProneInitializationTime);
     timings.timings().entrySet().stream()
         .sorted(Map.Entry.<String, Duration>comparingByValue().reversed())
         .limit(10) // best-effort to stay under the action metric size limit
         .forEachOrdered(e -> statisticsBuilder.addBugpatternTiming(e.getKey(), e.getValue()));
+    long duration = (System.nanoTime() - startTime) / 1000;
+    System.out.println("ErrorPronePlugin.finish duration: " + duration + " us");
   }
 
   // TODO(cushon): remove once ErrorProneTimings#initializationTime makes it into an EP release
