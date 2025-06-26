@@ -405,6 +405,35 @@ public final class JavaCompileAction extends AbstractAction implements CommandAc
     ReducedClasspath reducedClasspath;
     Spawn spawn;
     try {
+      System.out.println("Hello from JavaCompileAction.execute");
+      System.out.println("directJars: ");
+      for (Artifact directJar : directJars.toList()) {
+        System.out.println("  - " + directJar);
+      }
+//      System.out.println("mandatoryInputs: ");
+//      for (Artifact mandatoryInput : mandatoryInputs.toList()) {
+//        System.out.println("  - " + mandatoryInputs);
+//      }
+//      System.out.println("transitiveInputs: ");
+//      for (Artifact transitiveInput : transitiveInputs.toList()) {
+//        System.out.println("  - " + transitiveInputs);
+//      }
+
+      System.out.println("dependencyArtifacts: ");
+      for (Artifact depArtifact : dependencyArtifacts.toList()) {
+        JavaCompileActionContext context =
+                actionExecutionContext.getContext(JavaCompileActionContext.class);
+        System.out.println(" - " + depArtifact);
+        try {
+          for (Deps.Dependency dep :
+                  context.getDependencies(depArtifact, actionExecutionContext).getDependencyList()) {
+            System.out.println("   -- " + dep.toString().replace("kind:", "      kind:"));
+          }
+        } catch (IOException e) {
+
+        }
+      }
+
       if (classpathMode == JavaClasspathMode.BAZEL) {
         JavaCompileActionContext context =
             actionExecutionContext.getContext(JavaCompileActionContext.class);
@@ -429,7 +458,13 @@ public final class JavaCompileAction extends AbstractAction implements CommandAc
               .getContext(SpawnStrategyResolver.class)
               .exec(spawn, actionExecutionContext);
     } catch (ExecException e) {
+      System.out.println("**** ExecException ****");
+      e.printStackTrace();
       throw ActionExecutionException.fromExecException(e, this);
+    }
+    System.out.println("primaryResults: ");
+    for (SpawnResult pr: primaryResults) {
+      System.out.println(" - " + pr);
     }
 
     if (reducedClasspath == null) {
@@ -473,6 +508,7 @@ public final class JavaCompileAction extends AbstractAction implements CommandAc
     }
 
     try {
+      System.out.println("*** Time for a fallback!!! ***");
       spawn = getReducedSpawn(actionExecutionContext, reducedClasspath, /* fallback= */ true);
     } catch (CommandLineExpansionException e) {
       Code detailedCode = Code.COMMAND_LINE_EXPANSION_FAILURE;
