@@ -55,10 +55,12 @@ public class ReducedClasspathJavaLibraryBuilder extends SimpleJavaLibraryBuilder
     // Compile!
     BlazeJavacResult result =
         javacRunner.invokeJavac(build.toBlazeJavacArguments(compressedClasspath));
+    System.out.println("**** com.google.devtools.build.buildjar.ReducedClasspathJavaLibraryBuilder#compileSources: result = " + result);
 
     // If javac errored out and there's any chance that the cause was missing classpath entries,
     // then give it another try with the full classpath.
     boolean fallback = shouldFallBack(result);
+    System.out.println("**** com.google.devtools.build.buildjar.ReducedClasspathJavaLibraryBuilder#compileSources: fallback = " + fallback);
     if (fallback) {
       if (build.reduceClasspathMode() == ReduceClasspathMode.BAZEL_REDUCED) {
         return BlazeJavacResult.fallback();
@@ -106,10 +108,17 @@ public class ReducedClasspathJavaLibraryBuilder extends SimpleJavaLibraryBuilder
   }
 
   private static boolean shouldFallBack(BlazeJavacResult result) {
+    System.out.println("**** com.google.devtools.build.buildjar.ReducedClasspathJavaLibraryBuilder#shouldFallBack: result.isOk() = " + result.isOk());
+    System.out.println("**** com.google.devtools.build.buildjar.ReducedClasspathJavaLibraryBuilder#shouldFallBack: result.status() = " + result.status());
+    System.out.println("**** com.google.devtools.build.buildjar.ReducedClasspathJavaLibraryBuilder#shouldFallBack: result.diagnostics().isEmpty() = " + result.diagnostics().isEmpty());
+    System.out.println("**** com.google.devtools.build.buildjar.ReducedClasspathJavaLibraryBuilder#shouldFallBack: result.diagnostics().stream().allMatch(d -> d.isJSpecifyDiagnostic()) = " + result.diagnostics().stream().allMatch(d -> d.isJSpecifyDiagnostic()));
     if (result.isOk()) {
       return false;
     }
     if (result.status().equals(Status.CRASH)) {
+      return true;
+    }
+    if (result.diagnostics().isEmpty()) {
       return true;
     }
     if (result.diagnostics().stream().allMatch(d -> d.isJSpecifyDiagnostic())) {

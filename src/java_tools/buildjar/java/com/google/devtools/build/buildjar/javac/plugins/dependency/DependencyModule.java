@@ -150,6 +150,7 @@ public final class DependencyModule {
     }
     deps.setSuccess(successful);
     if (requiresFallback) {
+      System.out.println("**** com.google.devtools.build.buildjar.javac.plugins.dependency.DependencyModule#buildDependenciesProto: requiresFallback = true");
       deps.setRequiresReducedClasspathFallback(true);
     }
 

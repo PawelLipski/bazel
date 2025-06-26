@@ -109,6 +109,11 @@ public class BazelJavaBuilder {
       SimpleJavaLibraryBuilder builder, JavaLibraryBuildRequest buildRequest, Writer err)
       throws Exception {
     BlazeJavacResult result = builder.run(buildRequest);
+    // Whoops okay, so REQUIRES_FALLBACK means exit code 0 lol;
+    // the info about fallback is returned in deps proto, not via exit code
+    // see com.google.devtools.build.buildjar.SimpleJavaLibraryBuilder#run ->
+    // -> com.google.devtools.build.buildjar.javac.plugins.dependency.DependencyModule#emitDependencyInformation
+    System.out.println("**** com.google.devtools.build.buildjar.BazelJavaBuilder#build: result = " + result);
     if (result.status() == Status.REQUIRES_FALLBACK) {
       return 0;
     }

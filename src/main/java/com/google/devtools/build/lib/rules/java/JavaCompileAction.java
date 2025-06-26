@@ -414,10 +414,12 @@ public final class JavaCompileAction extends AbstractAction implements CommandAc
 //      for (Artifact mandatoryInput : mandatoryInputs.toList()) {
 //        System.out.println("  - " + mandatoryInputs);
 //      }
-//      System.out.println("transitiveInputs: ");
-//      for (Artifact transitiveInput : transitiveInputs.toList()) {
-//        System.out.println("  - " + transitiveInputs);
-//      }
+      System.out.println("transitiveInputs (projects only): ");
+      for (Artifact transitiveInput : transitiveInputs.toList()) {
+        if (transitiveInput.toString().contains("projects/")) {
+          System.out.println("  - " + transitiveInputs);
+        }
+      }
 
       System.out.println("dependencyArtifacts: ");
       for (Artifact depArtifact : dependencyArtifacts.toList()) {
@@ -442,6 +444,7 @@ public final class JavaCompileAction extends AbstractAction implements CommandAc
         } catch (IOException e) {
           throw createActionExecutionException(e, Code.REDUCED_CLASSPATH_FAILURE);
         }
+        System.out.println("Trying reduced spawn...");
         spawn = getReducedSpawn(actionExecutionContext, reducedClasspath, /* fallback= */ false);
       } else {
         reducedClasspath = null;
@@ -458,13 +461,13 @@ public final class JavaCompileAction extends AbstractAction implements CommandAc
               .getContext(SpawnStrategyResolver.class)
               .exec(spawn, actionExecutionContext);
     } catch (ExecException e) {
-      System.out.println("**** ExecException ****");
+      System.out.println("**** Primary ExecException ****");
       e.printStackTrace();
       throw ActionExecutionException.fromExecException(e, this);
     }
     System.out.println("primaryResults: ");
     for (SpawnResult pr: primaryResults) {
-      System.out.println(" - " + pr);
+      System.out.println(" - " + pr.status());
     }
 
     if (reducedClasspath == null) {
@@ -479,6 +482,7 @@ public final class JavaCompileAction extends AbstractAction implements CommandAc
           .getContext(JavaCompileActionContext.class)
           .insertDependencies(outputDepsProto, dependencies);
     }
+    System.out.println("dependencies.getRequiresReducedClasspathFallback = " + dependencies.getRequiresReducedClasspathFallback());
     if (!dependencies.getRequiresReducedClasspathFallback()) {
       return ActionResult.create(primaryResults);
     }
@@ -522,7 +526,13 @@ public final class JavaCompileAction extends AbstractAction implements CommandAc
               .getContext(SpawnStrategyResolver.class)
               .exec(spawn, actionExecutionContext);
     } catch (ExecException e) {
+      System.out.println("**** Fallback ExecException ****");
+      e.printStackTrace();
       throw ActionExecutionException.fromExecException(e, this);
+    }
+    System.out.println("fallbackResults: ");
+    for (SpawnResult fr: fallbackResults) {
+      System.out.println(" - " + fr.failureDetail());
     }
 
     if (compilationType == CompilationType.TURBINE) {

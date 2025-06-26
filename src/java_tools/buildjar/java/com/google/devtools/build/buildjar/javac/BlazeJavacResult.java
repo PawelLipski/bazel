@@ -105,4 +105,15 @@ public class BlazeJavacResult {
   public BlazeJavaCompiler compiler() {
     return compiler;
   }
+
+  @java.lang.Override
+  public java.lang.String toString() {
+    return "BlazeJavacResult{" +
+            "status=" + status +
+            ", diagnostics=" + diagnostics +
+            ", output='" + output + '\'' +
+            ", compiler=" + compiler +
+            ", statistics=" + statistics +
+            '}';
+  }
 }
