@@ -112,6 +112,9 @@ public class ReducedClasspathJavaLibraryBuilder extends SimpleJavaLibraryBuilder
     if (result.status().equals(Status.CRASH)) {
       return true;
     }
+    if (result.diagnostics().isEmpty()) {
+      return true;
+    }
     if (result.diagnostics().stream().allMatch(d -> d.isJSpecifyDiagnostic())) {
       return false;
     }
