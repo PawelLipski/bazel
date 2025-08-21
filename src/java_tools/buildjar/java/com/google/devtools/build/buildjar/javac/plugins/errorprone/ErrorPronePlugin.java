@@ -37,10 +37,16 @@ import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * A plugin that performs Error Prone analysis. Error Prone is a static analysis framework that we
@@ -148,6 +154,21 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
         .sorted(Map.Entry.<String, Duration>comparingByValue().reversed())
         .limit(10) // best-effort to stay under the action metric size limit
         .forEachOrdered(e -> statisticsBuilder.addBugpatternTiming(e.getKey(), e.getValue()));
+
+    String home = System.getProperty("user.home");
+    Path originalPath = Paths.get(home + "/universe/error-prone.patch");
+    // Check if the file exists
+    if (Files.exists(originalPath)) {
+      String uuid = UUID.randomUUID().toString();
+      Path targetPath = Paths.get(home + "/universe/error-prone-" + uuid + ".patch");
+
+      try {
+        Files.move(originalPath, targetPath);
+        System.out.println("File " + originalPath + "  moved to " + targetPath);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   // TODO(cushon): remove once ErrorProneTimings#initializationTime makes it into an EP release
