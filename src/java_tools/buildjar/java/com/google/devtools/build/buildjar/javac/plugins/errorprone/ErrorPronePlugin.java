@@ -25,20 +25,28 @@ import com.google.errorprone.ErrorProneError;
 import com.google.errorprone.ErrorProneOptions;
 import com.google.errorprone.ErrorProneTimings;
 import com.google.errorprone.InvalidCommandLineOptionException;
+import com.google.errorprone.RefactoringCollection;
 import com.google.errorprone.scanner.BuiltInCheckerSuppliers;
 import com.google.errorprone.scanner.ScannerSupplier;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskEvent.Kind;
+import com.sun.tools.javac.api.MultiTaskListener;
 import com.sun.tools.javac.code.DeferredCompletionFailureHandler;
 import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * A plugin that performs Error Prone analysis. Error Prone is a static analysis framework that we
@@ -82,6 +90,7 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
     ImmutableList.Builder<String> epArgs = ImmutableList.<String>builder().addAll(blazeJavacopts);
     // allow javacopts that reference unknown error-prone checks
     epArgs.add("-XepIgnoreUnknownCheckNames");
+    System.out.println("Hello from ErrorPronePlugin");
     processEpOptions(epArgs.build());
   }
 
@@ -106,8 +115,14 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
     if (epOptions == null) {
       epOptions = ErrorProneOptions.empty();
     }
+    RefactoringCollection[] refactoringCollection = {null};
     errorProneAnalyzer =
-        ErrorProneAnalyzer.createByScanningForPlugins(scannerSupplier, epOptions, context);
+        ErrorProneAnalyzer.createAnalyzer(scannerSupplier, epOptions, context, refactoringCollection);
+    if (refactoringCollection[0] != null) {
+      ErrorProneAnalyzer.RefactoringTask refactoringTask =
+          new ErrorProneAnalyzer.RefactoringTask(context, refactoringCollection[0]);
+      MultiTaskListener.instance(context).add(refactoringTask);
+    }
     timings = ErrorProneTimings.instance(context);
     deferredCompletionFailureHandler = DeferredCompletionFailureHandler.instance(context);
   }
@@ -140,6 +155,21 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
         .sorted(Map.Entry.<String, Duration>comparingByValue().reversed())
         .limit(10) // best-effort to stay under the action metric size limit
         .forEachOrdered(e -> statisticsBuilder.addBugpatternTiming(e.getKey(), e.getValue()));
+
+    String home = System.getProperty("user.home");
+    Path originalPath = Paths.get(home + "/universe/error-prone.patch");
+    // Check if the file exists
+    if (Files.exists(originalPath)) {
+      String uuid = UUID.randomUUID().toString();
+      Path targetPath = Paths.get(home + "/universe/error-prone-" + uuid + ".patch");
+
+      try {
+        Files.move(originalPath, targetPath);
+        System.out.println("File " + originalPath + "  moved to " + targetPath);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   // TODO(cushon): remove once ErrorProneTimings#initializationTime makes it into an EP release

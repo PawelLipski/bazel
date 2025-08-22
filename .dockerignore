@@ -1,0 +1,8 @@
+.dockerignore
+.git
+.ijwb
+Dockerfile
+bazel-bazel
+bazel-bin
+bazel-out
+bazel-testlogs
