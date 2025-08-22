@@ -90,6 +90,7 @@ public final class ErrorPronePlugin extends BlazeJavaCompilerPlugin {
     ImmutableList.Builder<String> epArgs = ImmutableList.<String>builder().addAll(blazeJavacopts);
     // allow javacopts that reference unknown error-prone checks
     epArgs.add("-XepIgnoreUnknownCheckNames");
+    System.out.println("Hello from ErrorPronePlugin");
     processEpOptions(epArgs.build());
   }
 
